@@ -12,41 +12,53 @@ exports.addItemToCart = (req, res) =>{
 
             const product =  req.body.cartItems.product;
             const item = cart.cartItems.find(c=> c.product == product);
-
+            let condition , update;
+            
+        
             if(item){
 
-                Cart.findOneAndUpdate({ "user": req.user._id, "cartItems.product":product },{
+                condition = { "user": req.user._id, "cartItems.product":product };
+                update = {
                     "$set":{
-                        "cartItems": {
+                        "cartItems.$": {
                             ...req.body.cartItems,
                             quantity:item.quantity + req.body.cartItems.quantity
                         }
                     }
-                    })//meya exec karanne nathuwa run nowe.
-                    .exec((error, _cart)=>{
-                        if(error) return res.status(400).json({ error});
-                        if(_cart){
-                            return res.status(201).json({ cart});
-                        }  
-                    })
+                };
+
+                // Cart.findOneAndUpdate({ "user": req.user._id, "cartItems.product":product },{
+                //     "$set":{
+                //         "cartItems.$": {
+                //             ...req.body.cartItems,
+                //             quantity:item.quantity + req.body.cartItems.quantity
+                //         }
+                //     }
+                //     })//meya exec karanne nathuwa run nowe.
+                //     .exec((error, _cart)=>{
+                //         if(error) return res.status(400).json({ error});
+                //         if(_cart){
+                //             return res.status(201).json({ cart});
+                //         }  
+                //     })
                 
 
             }else{
 
-                Cart.findOneAndUpdate({ user: req.user._id},{
+                condition = { user: req.user._id};
+                update= {
                     "$push":{
                         "cartItems": req.body.cartItems
                     }
-                    })//meya exec karanne nathuwa run nowe.
-                    .exec((error, _cart)=>{
-                        if(error) return res.status(400).json({ error});
-                        if(_cart){
-                            return res.status(201).json({ cart});
-                        }  
-                    })
+                }
             }
-
-
+            Cart.findOneAndUpdate(condition,update)//meya exec karanne nathuwa run nowe.
+                .exec((error, _cart)=>{
+                    if(error) return res.status(400).json({ error});
+                    if(_cart){
+                        return res.status(201).json({ cart});
+                    }  
+                })
         }else{
             //mema item eka kalin add kara nomatinam aluten cart ekata add karai.
             const cart = new Cart({
